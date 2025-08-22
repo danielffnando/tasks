@@ -156,11 +156,12 @@ class TaskTableDraw:
         try:
             for line in range(0, table_column_num_char):
                 print(TaskTableDraw.PrintLineWithVerticalSpacer(task_array[line], array_longer_line))
+                print(TaskTableDraw.DrawDividingLine(table_row_num_char_with_spacer))
         except IndexError:
             table_column_num_char = numpy.shape(task_array)[0]
             for line in range(0, table_column_num_char-2):
                 print(TaskTableDraw.PrintLineWithVerticalSpacer(task_array, array_longer_line))
-        print(TaskTableDraw.DrawDividingLine(table_row_num_char_with_spacer))
+#        print(TaskTableDraw.DrawDividingLine(table_row_num_char_with_spacer))
 
 
 def Commands(comm): # TODO 'self'
