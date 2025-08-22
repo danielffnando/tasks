@@ -2,33 +2,33 @@ import numpy
 import sys
 import configparser
 
-task_array = numpy.array(['n','Task','Status'])
+#task_array = numpy.array(['n','Task','Status'])
 task_config = configparser.ConfigParser()
 loop = True
-defaut_config = ['status_scope=simple',
+default_config = ['status_scope=simple',
                  'table_align=left',
                  'subtasks=false',
                  'autosave=true',
                  'show=all',
                  'done_tasks=keep',
-                 'run_withou_args=open',
+                 'run_without_args=open',
                  'screen_clean=true']
 # TODO Options:
 # Status: To Do, In Progress, Done// To Do, Done
 # Table: Left align, centered, right align
-# Sub tasks (1.1, 1.1.1, etc)
+# Sub tasks (1.1, 1.1.1, etc.)
 # Autosave=(true,false)
-# show=all, todo/in prongress
-# done tasks = keep, delete, archive (archive will give special index numeber, maybe a.1 or a1)
-# run_withou_args = open, open with new, list
+# show=all, todo/in progress
+# done tasks = keep, delete, archive (archive will give special index number, maybe a.1 or a1)
+# run_without_args = open, open with new, list
 # screen_clean = true, false
 
 
 class TaskFiles:
     def TaskFileLoad(): # TODO 'self'
-        global task_array
+        #global task_array
         try:
-            task_array = numpy.loadtxt('tasks.txt', dtype='str', delimiter=',')
+            array = numpy.loadtxt('tasks.txt', dtype='str', delimiter=',')
         except FileNotFoundError:
             print('Tasks file not found, creating new tasks file...')
             try:
@@ -38,15 +38,16 @@ class TaskFiles:
                 sys.exit()
             else:
                 print('New tasks file created')
-                
+        return array
+
     def TaskFileSave():
         try:
-            numpy.savetxt('tasks.txt', task_array, delimiter=',', fmt='%s')
+            numpy.savetxt('tasks.txt', numpy.array(['n','Task','Status'], ndim=2), delimiter=',', fmt='%s')
         except:
             print('Failed to save')
 
 class TaskCommands:
-    def TaskList():
+    def TaskList(array):
         TaskTableDraw.TableDraw()
 
     def TaskNew(): # TODO 'self'
@@ -70,7 +71,7 @@ class TaskCommands:
             elif to_edit == 0:
                 return
             elif to_edit > numpy.shape(task_array)[0]-1:
-                print('Please use an index number corrently in use\n')
+                print('Please use an index number currently in use\n')
                 TaskCommands.TaskEdit()
             else: # TODO match case
                 to_change = input('Change task name or status? (Leave empty to return): ')
@@ -100,7 +101,7 @@ class TaskCommands:
             elif to_delete == 0:
                 return
             elif to_delete > numpy.shape(task_array)[0]-1:
-                print('Please use an index number corrently in use\n')
+                print('Please use an index number currently in use\n')
                 TaskDelete()
             else:
                 task_array = numpy.delete(task_array,to_delete,axis=0)
@@ -116,6 +117,7 @@ class TaskUtils:
                 break
         
 class TaskTableDraw:
+    @staticmethod
     def ArrayCharWidth(array): # TODO 'self'
         table_line_size = 0
         longer_line = []
@@ -161,44 +163,40 @@ class TaskTableDraw:
             table_column_num_char = numpy.shape(task_array)[0]
             for line in range(0, table_column_num_char-2):
                 print(TaskTableDraw.PrintLineWithVerticalSpacer(task_array, array_longer_line))
-#        print(TaskTableDraw.DrawDividingLine(table_row_num_char_with_spacer))
+            print(TaskTableDraw.DrawDividingLine(table_row_num_char_with_spacer))
 
-
-def Commands(comm): # TODO 'self'
-    global loop
-    match comm:
-        case 'List' | 'list' | 'l':
-            TaskCommands.TaskList()
-        case 'New' | 'new' | 'n':
-            TaskCommands.TaskNew()
-            TaskUtils.UpdateTasksIndexNumber()
-            TaskCommands.TaskList()
-        case 'Edit' | 'edit' | 'e':
-            TaskCommands.TaskEdit()
-            TaskUtils.UpdateTasksIndexNumber()
-            TaskCommands.TaskList()
-        case 'Delete' | 'delete' | 'd':
-            TaskCommands.TaskDelete()
-            TaskUtils.UpdateTasksIndexNumber()
-            TaskCommands.TaskList()
-        # TODO Undo: undo last edit
-        # TODO Config: edit program options
-        # TODO Save: save current tasklist
-        # TODO Save and exit: save current tasklist and exit
-        # TODO auto save when comm=ex: true, false
-        case 'Save' | 'save' | 's':
-            TaskFiles.TaskFileSave()
-        case 'Exit' | 'exit' | 'ex':
-            TaskFiles.TaskFileSave()
-            loop = False
-        case _:
-            return 'Please select an option'
-        
 def main():
-    TaskFiles.TaskFileLoad()
+    task_array = TaskFiles.TaskFileLoad()
+    print(task_array)
+    loop = True
     while loop == True:
-        Commands(input('Type your option: '))
+        match input('Type your option: '):
+            case 'List' | 'list' | 'l':
+                TaskCommands.TaskList()
+            case 'New' | 'new' | 'n':
+                TaskCommands.TaskNew()
+                TaskUtils.UpdateTasksIndexNumber()
+                TaskCommands.TaskList()
+            case 'Edit' | 'edit' | 'e':
+                TaskCommands.TaskEdit()
+                TaskUtils.UpdateTasksIndexNumber()
+                TaskCommands.TaskList()
+            case 'Delete' | 'delete' | 'd':
+                TaskCommands.TaskDelete()
+                TaskUtils.UpdateTasksIndexNumber()
+                TaskCommands.TaskList()
+            # TODO Undo: undo last edit
+            # TODO Config: edit program options
+            # TODO Save: save current tasklist
+            # TODO Save and exit: save current tasklist and exit
+            # TODO auto save when comm=ex: true, false
+            case 'Save' | 'save' | 's':
+                TaskFiles.TaskFileSave()
+            case 'Exit' | 'exit' | 'ex':
+                TaskFiles.TaskFileSave()
+                loop = False
+            case _:
+                return 'Please select an option'
 
 if __name__ == '__main__':
-
     main()
