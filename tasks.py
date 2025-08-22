@@ -25,7 +25,7 @@ defaut_config = ['status_scope=simple',
 
 
 class TaskFiles:
-    def TaskFileLoad(self, array): # TODO 'self'
+    def TaskFileLoad(): # TODO 'self'
         global task_array
         try:
             task_array = numpy.loadtxt('tasks.txt', dtype='str', delimiter=',')
@@ -199,4 +199,5 @@ def main():
         Commands(input('Type your option: '))
 
 if __name__ == '__main__':
+
     main()
