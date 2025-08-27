@@ -11,9 +11,10 @@ default_config = ['status_scope=simple',
                 'done_tasks=keep',
                 'run_without_args=open',
                 'screen_clean=true',
-                'table_lines = all',
-                'extra_left_spacing = 0',
-                'extra_right_spacing = 0']
+                'table_lines=all',
+                'extra_left_spacing=0',
+                'extra_right_spacing=0',
+                'save_file=tasks.txt']
 # TODO Options:
 # Status: To Do, In Progress, Done// To Do, Done
 # Table: Left align, centered, right align
@@ -26,6 +27,7 @@ default_config = ['status_scope=simple',
 # table_lines = all, column, line, title
 # extra_left_spacing = int()
 # extra_right_spacing = int()
+# tasks file name
 
 # Dealing with args
 
@@ -47,30 +49,25 @@ group.add_argument('-c', help='edit flags in tasks.config file', metavar=('FLAG=
 options = vars(parser.parse_args())
 
 arg_value = None
+
 if options['l'] is not False:
     chosen_arg = 'l'
     arg_value = options['l']
-    print(f'args.l, chosen_arg={chosen_arg}, arg_value={arg_value}')
 if options['n'] is not None:
     chosen_arg = 'n'
     arg_value = options['n']
-    print(f'args.n, chosen_arg={chosen_arg}, arg_value={arg_value}')
 if options['t'] is not None:
     chosen_arg = 't'
     arg_value = options['t']
-    print(f'args.t, chosen_arg={chosen_arg}, arg_value={arg_value}')
 if options['r'] is not None:
     chosen_arg = 'r'
     arg_value = options['r']
-    print(f'args.r, chosen_arg={chosen_arg}, arg_value={arg_value}')
 if options['d'] is not None:
     chosen_arg = 'd'
     arg_value = options['d']
-    print(f'args.d, chosen_arg={chosen_arg}, arg_value={arg_value}')
 if options['c'] is not None:
     chosen_arg = 'c'
     arg_value = options['c']
-    print(f'args.c, chosen_arg={chosen_arg}, arg_value={arg_value}')
 
 # Classes for the program
 
@@ -83,8 +80,8 @@ class TaskFiles:
             print('Tasks file not found, creating new tasks file...')
             try:
                 TaskFiles.TaskFileSave(numpy.array(['n','Task','Status']))
-            except:
-                print('Tasks file creation failed')
+            except Exception as error:
+                print('Tasks file creation failed:', error)
                 sys.exit()
             else:
                 print('New tasks file created')
@@ -94,8 +91,8 @@ class TaskFiles:
     def TaskFileSave(array):
         try:
             numpy.savetxt('tasks.txt', array, delimiter=',', fmt='%s')
-        except:
-            print('Failed to save')
+        except Exception as error:
+            print('Failed to save:', error)
 
 class TaskCommands:
     @staticmethod
@@ -103,128 +100,60 @@ class TaskCommands:
         TaskTableDraw.TableDraw(array)
 
     @staticmethod
-    def TaskNew(array):
-        taskname = input('New task name: ')
-        if taskname == '':
+    def TaskNew(array, name):
+        if name == '':
             return array
-        array = numpy.vstack((array,['1970', taskname, 'To Do']))
-        return array
-
-    @staticmethod
-    def TaskEdit(array):
-        TaskCommands.TaskList(array)
-        to_edit = input('Task to edit (Leave empty to return): ')
-        try:
-            to_edit = int(to_edit) # não está permitindo deixar vazio
-        except:
-            print('Please type the task index number')
-            TaskCommands.TaskEdit(array)
-        else: # TODO match case
-            if to_edit == '': # use 'or' # não está chegando aqui por causa do try
-                return array
-            elif to_edit == 0:
-                return array
-            elif to_edit > numpy.shape(array)[0]-1:
-                print('Please use an index number currently in use\n')
-                TaskCommands.TaskEdit(array)
-            else: # TODO match case
-                to_change = input('Change task name or status?'\
-                                    '(Leave empty to return): ')
-                if to_change == 'name':
-                    new_name = input('New task name: ')
-                    array[to_edit][1] = new_name
-                elif to_change == 'status':
-                    new_status = input('New task status (done, todo): ')
-                    array[to_edit][2] = new_status
-                elif to_change == '':
-                    TaskCommands.TaskEdit(array)
-                else:
-                    print('Please choose a valid option\n')
-                    TaskCommands.TaskEdit(array)
+        array = numpy.vstack((array,['1970', name, 'To Do']))
         return array
     
     @staticmethod
-    def TaskToggle(array):
-        TaskCommands.TaskList(array)
-        to_edit = input('Task to edit (Leave empty to return): ')
+    def TaskToggle(array, to_edit):
         try:
-            to_edit = int(to_edit) # não está permitindo deixar vazio
+            to_edit = int(to_edit)
         except:
             print('Please type the task index number')
-            TaskCommands.TaskEdit(array)
-        else: # TODO match case
-            if to_edit == '': # use 'or' # não está chegando aqui por causa do try
-                return array
-            elif to_edit == 0:
-                return array
-            elif to_edit > numpy.shape(array)[0]-1:
-                print('Please use an index number currently in use\n')
-                TaskCommands.TaskEdit(array)
-            else: # TODO match case
-                to_change = input('Change task name or status?'\
-                                    '(Leave empty to return): ')
-                if to_change == 'name':
-                    new_name = input('New task name: ')
-                    array[to_edit][1] = new_name
-                elif to_change == 'status':
-                    new_status = input('New task status (done, todo): ')
-                    array[to_edit][2] = new_status
-                elif to_change == '':
-                    TaskCommands.TaskEdit(array)
-                else:
-                    print('Please choose a valid option\n')
-                    TaskCommands.TaskEdit(array)
-        return array
-    
-    @staticmethod
-    def TaskRename(array):
-        TaskCommands.TaskList(array)
-        to_edit = input('Task to edit (Leave empty to return): ')
-        try:
-            to_edit = int(to_edit) # não está permitindo deixar vazio
-        except:
-            print('Please type the task index number')
-            TaskCommands.TaskEdit(array)
-        else: # TODO match case
-            if to_edit == '': # use 'or' # não está chegando aqui por causa do try
-                return array
-            elif to_edit == 0:
-                return array
-            elif to_edit > numpy.shape(array)[0]-1:
-                print('Please use an index number currently in use\n')
-                TaskCommands.TaskEdit(array)
-            else: # TODO match case
-                to_change = input('Change task name or status?'\
-                                    '(Leave empty to return): ')
-                if to_change == 'name':
-                    new_name = input('New task name: ')
-                    array[to_edit][1] = new_name
-                elif to_change == 'status':
-                    new_status = input('New task status (done, todo): ')
-                    array[to_edit][2] = new_status
-                elif to_change == '':
-                    TaskCommands.TaskEdit(array)
-                else:
-                    print('Please choose a valid option\n')
-                    TaskCommands.TaskEdit(array)
-        return array
-    
-    @staticmethod
-    def TaskDelete(array):
-        TaskCommands.TaskList(array)
-        try:
-            to_delete = int(input('Task to delete (Leave empty to return): '))
-        except:
-            print('Please type the task index number\n')
-            TaskDelete(array)
+            return array
         else:
-            if to_delete == '':
-                return
-            elif to_delete == 0:
-                return
-            elif to_delete > numpy.shape(array)[0]-1:
+            if to_edit > numpy.shape(array)[0]-1:
                 print('Please use an index number currently in use\n')
-                TaskDelete(array)
+                return array
+            else:
+                if array[to_edit][2] == 'To Do':
+                    array[to_edit][2] = 'Done'
+                elif array[to_edit][2] == 'Done':
+                    array[to_edit][2] = 'To do'
+                else:
+                    print('Something when wrong with toggle')
+                    return array
+        return array
+    
+    @staticmethod
+    def TaskRename(array, to_edit, new_name):
+        try:
+            to_edit = int(to_edit)
+        except ValueError:
+            print('Please type a valid task index number')
+        else:
+            if to_edit > numpy.shape(array)[0]-1:
+                print('Please use an index number currently in use\n')
+                return array
+            elif new_name == '':
+                return array
+            else:
+                array[to_edit][1] = new_name
+        return array
+    
+    @staticmethod
+    def TaskDelete(array, to_delete):
+        try:
+            to_delete = int(to_delete)
+        except ValueError:
+            print('Please type the task index number\n')
+            return array
+        else:
+            if to_delete > numpy.shape(array)[0]-1:
+                print('Please use an index number currently in use\n')
+                return array
             else:
                 array = numpy.delete(array,to_delete,axis=0)
             return array
@@ -304,27 +233,24 @@ def Commands(array, option):
             TaskCommands.TaskList(array)
             return array, loop
         case 'New' | 'new' | 'n':
-            array = TaskCommands.TaskNew(array)
-            array = TaskUtils.UpdateTasksIndexNumber(array)
-            TaskCommands.TaskList(array)
-            return array, loop
-        case 'Edit' | 'edit' | 'e':
-            array = TaskCommands.TaskEdit(array)
+            array = TaskCommands.TaskNew(array, input('New task name: '))
             array = TaskUtils.UpdateTasksIndexNumber(array)
             TaskCommands.TaskList(array)
             return array, loop
         case 'Toggle' | 'toggle' | 't':
-            array = TaskCommands.TaskToggle(array)
-            array = TaskUtils.UpdateTasksIndexNumber(array)
+            array = TaskCommands.TaskToggle(array,
+                        input('Task to toggle (Leave empty to return): '))
             TaskCommands.TaskList(array)
             return array, loop
         case 'Rename' | 'rename' | 'r':
-            array = TaskCommands.TaskRename(array)
-            array = TaskUtils.UpdateTasksIndexNumber(array)
+            array = TaskCommands.TaskRename(array,
+                        input('Task to rename (Leave empty to return): '),
+                        input('Task to new name (Leave empty to return): '))
             TaskCommands.TaskList(array)
             return array, loop
         case 'Delete' | 'delete' | 'd':
-            array = TaskCommands.TaskDelete(array)
+            array = TaskCommands.TaskDelete(array,
+                        input('Task to delete (Leave empty to return): '))
             array = TaskUtils.UpdateTasksIndexNumber(array)
             TaskCommands.TaskList(array)
             return array, loop
@@ -341,41 +267,41 @@ def Commands(array, option):
             TaskFiles.TaskFileSave(array)
             loop = False
             return array, loop
+        case 'Help' | 'help' | 'h' | '-h' | '--help' | 'options':
+            print('A simple to-do list and task manager.\n\n'\
+                    'options:\n'\
+                    '   h, help         show this help message\n'\
+                    '   l, list         list all tasks\n'\
+                    '   n, new          create a new task\n'\
+                    '   t, toggle       toggle task status\n'\
+                    '   r, rename       rename a task\n'\
+                    '   d, delete       delete a task\n'\
+                    '   c, config       edit flags in tasks.config file\n')
+            return array, loop
         case _:
             return 'Please select an option'
 
-def CliCommands(array, option):
+def CliCommands(array, option, args):
     match option:
         case 'l': # List
             TaskCommands.TaskList(array)
-        case 'n':
-            # New
-            array = TaskCommands.TaskNew(array)
+        case 'n': # New
+            array = TaskCommands.TaskNew(array, args[0])
             array = TaskUtils.UpdateTasksIndexNumber(array)
             TaskFiles.TaskFileSave(array)
-        case 'e':
-            # Edit
-            array = TaskCommands.TaskEdit(array)
-            array = TaskUtils.UpdateTasksIndexNumber(array)
+        case 't': # Toggle
+            array = TaskCommands.TaskToggle(array, args[0])
             TaskFiles.TaskFileSave(array)
-        case 't':
-            # Toggle
-            array = TaskCommands.TaskToggle(array)
-            array = TaskUtils.UpdateTasksIndexNumber(array)
+        case 'r': # Rename
+            array = TaskCommands.TaskRename(array, args[0], args[1])
             TaskFiles.TaskFileSave(array)
-        case 'r':
-            # Rename
-            array = TaskCommands.TaskRename(array)
-            array = TaskUtils.UpdateTasksIndexNumber(array)
-            TaskFiles.TaskFileSave(array)
-        case 'd':
-            # Delete
-            array = TaskCommands.TaskDelete(array)
+        case 'd': # Delete
+            array = TaskCommands.TaskDelete(array, args)
             array = TaskUtils.UpdateTasksIndexNumber(array)
             TaskFiles.TaskFileSave(array)
         case 'c':
             # Config
-            print('Config not yet working')
+            print('Config still in development')
 
 def main():
     task_array = TaskFiles.TaskFileLoad()
@@ -385,11 +311,9 @@ def main():
 
 def cli(chosen_arg, arg_value):
     task_array = TaskFiles.TaskFileLoad()
-    CliCommands(task_array, chosen_arg)
+    CliCommands(task_array, chosen_arg, arg_value)
 
 if __name__ == '__main__' and arg_value == None:
-    print('we went with main')
     main()
 else:
-    print('we went with cli')
     cli(chosen_arg, arg_value)
