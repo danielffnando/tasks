@@ -1,35 +1,116 @@
 import numpy
 import sys
 import argparse
+import configparser
 
-#task_array = numpy.array(['n','Task','Status'])
-default_config = ['status_scope=simple',
-                'table_align=left',
-                'subtasks=false',
-                'autosave=true',
-                'show=all',
-                'done_tasks=keep',
-                'run_without_args=open',
-                'screen_clean=true',
-                'table_lines=all',
-                'extra_left_spacing=0',
-                'extra_right_spacing=0',
-                'save_file=tasks.txt']
-# TODO Options:
-# Status: To Do, In Progress, Done// To Do, Done
-# Table: Left align, centered, right align
-# Sub tasks (1.1, 1.1.1, etc.)
-# Autosave=(true,false)
-# show=all, todo/in progress
-# done tasks = keep, delete, archive (archive will give special index number, maybe a.1 or a1)
-# run_without_args = open, open with new, list
-# screen_clean = true, false
-# table_lines = all, column, line, title
-# extra_left_spacing = int()
-# extra_right_spacing = int()
-# tasks file name
+### Importand vars for config, TODO delete later
 
-# Dealing with args
+tasks_config_file = 'tasks.config'
+
+### Dealing with config
+
+# TODO Make unnamed section on config file for introdutory comments
+
+config_file = configparser.ConfigParser(allow_no_value=True)
+config_file.read('tasks.config')
+if config_file.sections() == []:
+    print('Config file not found, creating tasks.config')
+    config_file['DEFAULT'] = {
+        '# These are the possible values for the config file':None,
+        '# if you mess up, just delete the config file':None,
+        '# and a new config file will be created the next time you run':None,
+        '# the software':None,
+        
+        '# status_scope: (simple, in progress)':None,
+        '# choose to have the "in progress" status (not yet supported)\n':None,
+        
+        '# table_align: (left, center, right)':None,
+        '# choose the alignment of the printed tasks table (not yet supported)\n':None,
+        
+        '# subtasks: (true, false)':None,
+        '# choose to have subtasks (not yet supported)\n':None,
+        
+        '# autosave: (true, false)':None,
+        '# autosave before exiting when using program mode (not yet supported)\n':None,
+        
+        '# show: (all, current)': None,
+        '# show all tasks in save file or just Todo/In Progress (not yet supported)\n':None,
+        
+        '# done_tasks: (keep, hide, delete)': None,
+        '# keep, hide or delete tasks marked as To Do (not yet supported)\n':None,
+        
+        '# screen_clean: (true, false)': None,
+        '# clean the screen after each command on program mode (not yet supported)\n':None,
+        
+        '# table_lines: (all, title, columns, rows)': None,
+        '# which lines to show when drawing the tasks table (not yet supported)\n':None,
+        
+        '# extra_left_spacing: (0...)': None,
+        '# add extra spacing on the left of tasks table cells (not yet supported)\n':None,
+        
+        '# extra_right_spacing: (0...)': None,
+        '# add extra spacing on the right of tasks table cells (not yet supported)\n':None,
+        
+        '# save_file: (tasks.txt...)': None,
+        '# custom save file name/directory (not yet supported)\n':None,
+        
+        'status_scope': 'simple',
+        'table_align': 'left',
+        'subtasks': 'false',
+        'autosave': 'true',
+        'show': 'all',
+        'done_tasks': 'keep',
+        'screen_clean': 'true',
+        'table_lines': 'all',
+        'extra_left_spacing': '0',
+        'extra_right_spacing': '0',
+        'save_file': 'tasks.txt'}
+
+    config['CUSTOM'] = {
+        'status_scope': 'simple',
+        'table_align': 'left',
+        'subtasks': 'false',
+        'autosave': 'true',
+        'show': 'all',
+        'done_tasks': 'keep',
+        'screen_clean': 'true',
+        'table_lines': 'all',
+        'extra_left_spacing': '0',
+        'extra_right_spacing': '0',
+        'save_file': 'tasks.txt'}
+    
+    with open('tasks.config', 'w') as configfile:
+        config_file.write(configfile)
+
+config = {
+    'status_scope': config_file['CUSTOM']['status_scope'],
+    'table_align': config_file['CUSTOM']['table_align'],
+    'subtasks': config_file['CUSTOM'].getboolean('subtasks'),
+    'autosave': config_file['CUSTOM'].getboolean('autosave'),
+    'show': config_file['CUSTOM']['show'],
+    'done_tasks': config_file['CUSTOM']['done_tasks'],
+    'screen_clean': config_file['CUSTOM'].getboolean('screen_clean'),
+    'table_lines': config_file['CUSTOM']['table_lines'],
+    'extra_left_spacing': config_file['CUSTOM'].getint('extra_left_spacing'),
+    'extra_right_spacing': config_file['CUSTOM'].getint('extra_right_spacing'),
+    'save_file': config_file['CUSTOM']['save_file']
+}
+
+# print('my config:')
+# print(config['status_scope'])
+# print(config['table_align'])
+# print(config['subtasks'])
+# print(config['autosave'])
+# print(config['show'])
+# print(config['done_tasks'])
+# print(config['screen_clean'])
+# print(config['table_lines'])
+# print(config['extra_left_spacing'])
+# print(config['extra_right_spacing'])
+# print(config['save_file'])
+
+
+### Dealing with args
 
 parser = argparse.ArgumentParser(
                     prog='Tasks',
@@ -69,13 +150,13 @@ if options['c'] is not None:
     chosen_arg = 'c'
     arg_value = options['c']
 
-# Classes for the program
+### Classes for the program
 
 class TaskFiles:
     @staticmethod
     def TaskFileLoad():
         try:
-            array = numpy.loadtxt('tasks.txt', dtype='str', delimiter=',')
+            array = numpy.loadtxt(config['save_file'], dtype='str', delimiter=',')
         except FileNotFoundError:
             print('Tasks file not found, creating new tasks file...')
             try:
@@ -90,7 +171,7 @@ class TaskFiles:
     @staticmethod
     def TaskFileSave(array):
         try:
-            numpy.savetxt('tasks.txt', array, delimiter=',', fmt='%s')
+            numpy.savetxt(config['save_file'], array, delimiter=',', fmt='%s')
         except Exception as error:
             print('Failed to save:', error)
 
@@ -299,9 +380,10 @@ def CliCommands(array, option, args):
             array = TaskCommands.TaskDelete(array, args)
             array = TaskUtils.UpdateTasksIndexNumber(array)
             TaskFiles.TaskFileSave(array)
-        case 'c':
-            # Config
+        case 'c': # Config
             print('Config still in development')
+
+### Running the program
 
 def main():
     task_array = TaskFiles.TaskFileLoad()
