@@ -12,10 +12,10 @@ A simple to-do list, can be used as a cli command or in interactive mode.
 
 ## interactive mode
 Start interactive mode by running tasks.py without any argument. Type one of the following comamnds and answer the prompts
-h, help         show this help message
-l, list         list all tasks
-n, new          create a new task
-t, toggle       toggle task status
-r, rename       rename a task
-d, delete       delete a task
-c, config       edit flags in tasks.config file
+- h, help         show this help message
+- l, list         list all tasks
+- n, new          create a new task
+- t, toggle       toggle task status
+- r, rename       rename a task
+- d, delete       delete a task
+- c, config       edit flags in tasks.config file (not supported yet)
