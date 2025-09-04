@@ -1,114 +1,35 @@
 import numpy
 import sys
 import argparse
-import configparser
 
-### Importand vars for config, TODO delete later
+import tabledraw
+import configfile
+import themes
+
+### Important vars for config, TODO delete later
 
 tasks_config_file = 'tasks.config'
 
 ### Dealing with config
 
-# TODO Make unnamed section on config file for introdutory comments
+# dictionary:
+# config['status_scope'] = simple
+# config['table_align'] = left
+# config['subtasks'] = false
+# config['autosave'] = true
+# config['show'] = all
+# config['done_tasks'] = keep
+# config['screen_clean'] = true
+# config['table_lines'] = all
+# config['extra_left_spacing'] = 0
+# config['extra_right_spacing'] = 0
+# config['save_file'] = tasks.txt
 
-config_file = configparser.ConfigParser(allow_no_value=True)
-config_file.read('tasks.config')
-if config_file.sections() == []:
-    print('Config file not found, creating tasks.config')
-    config_file['DEFAULT'] = {
-        '# These are the possible values for the config file':None,
-        '# if you mess up, just delete the config file':None,
-        '# and a new config file will be created the next time you run':None,
-        '# the software':None,
-        
-        '# status_scope: (simple, in progress)':None,
-        '# choose to have the "in progress" status (not yet supported)\n':None,
-        
-        '# table_align: (left, center, right)':None,
-        '# choose the alignment of the printed tasks table (not yet supported)\n':None,
-        
-        '# subtasks: (true, false)':None,
-        '# choose to have subtasks (not yet supported)\n':None,
-        
-        '# autosave: (true, false)':None,
-        '# autosave before exiting when using program mode (not yet supported)\n':None,
-        
-        '# show: (all, current)': None,
-        '# show all tasks in save file or just Todo/In Progress (not yet supported)\n':None,
-        
-        '# done_tasks: (keep, hide, delete)': None,
-        '# keep, hide or delete tasks marked as To Do (not yet supported)\n':None,
-        
-        '# screen_clean: (true, false)': None,
-        '# clean the screen after each command on program mode (not yet supported)\n':None,
-        
-        '# table_lines: (all, title, columns, rows)': None,
-        '# which lines to show when drawing the tasks table (not yet supported)\n':None,
-        
-        '# extra_left_spacing: (0...)': None,
-        '# add extra spacing on the left of tasks table cells (not yet supported)\n':None,
-        
-        '# extra_right_spacing: (0...)': None,
-        '# add extra spacing on the right of tasks table cells (not yet supported)\n':None,
-        
-        '# save_file: (tasks.txt...)': None,
-        '# custom save file name/directory (not yet supported)\n':None,
-        
-        'status_scope': 'simple',
-        'table_align': 'left',
-        'subtasks': 'false',
-        'autosave': 'true',
-        'show': 'all',
-        'done_tasks': 'keep',
-        'screen_clean': 'true',
-        'table_lines': 'all',
-        'extra_left_spacing': '0',
-        'extra_right_spacing': '0',
-        'save_file': 'tasks.txt'}
+config = configfile.ConfigFile()
 
-    config['CUSTOM'] = {
-        'status_scope': 'simple',
-        'table_align': 'left',
-        'subtasks': 'false',
-        'autosave': 'true',
-        'show': 'all',
-        'done_tasks': 'keep',
-        'screen_clean': 'true',
-        'table_lines': 'all',
-        'extra_left_spacing': '0',
-        'extra_right_spacing': '0',
-        'save_file': 'tasks.txt'}
-    
-    with open('tasks.config', 'w') as configfile:
-        config_file.write(configfile)
+### Theme
 
-config = {
-    'status_scope': config_file['CUSTOM']['status_scope'],
-    'table_align': config_file['CUSTOM']['table_align'],
-    'subtasks': config_file['CUSTOM'].getboolean('subtasks'),
-    'autosave': config_file['CUSTOM'].getboolean('autosave'),
-    'show': config_file['CUSTOM']['show'],
-    'done_tasks': config_file['CUSTOM']['done_tasks'],
-    'screen_clean': config_file['CUSTOM'].getboolean('screen_clean'),
-    'table_lines': config_file['CUSTOM']['table_lines'],
-    'extra_left_spacing': config_file['CUSTOM'].getint('extra_left_spacing'),
-    'extra_right_spacing': config_file['CUSTOM'].getint('extra_right_spacing'),
-    'save_file': config_file['CUSTOM']['save_file']
-}
-
-# print('my config:')
-# print(config['status_scope'])
-# print(config['table_align'])
-# print(config['subtasks'])
-# print(config['autosave'])
-# print(config['show'])
-# print(config['done_tasks'])
-# print(config['screen_clean'])
-# print(config['table_lines'])
-# print(config['extra_left_spacing'])
-# print(config['extra_right_spacing'])
-# print(config['save_file'])
-
+theme = themes.Themes(0)
 
 ### Dealing with args
 
@@ -178,10 +99,11 @@ class TaskFiles:
 class TaskCommands:
     @staticmethod
     def TaskList(array):
-        TaskTableDraw.TableDraw(array)
+        tabledraw.TableDraw(array, config, theme)
 
     @staticmethod
     def TaskNew(array, name):
+        # TODO check if there is a ',' in the task name
         if name == '':
             return array
         array = numpy.vstack((array,['1970', name, 'To Do']))
@@ -210,6 +132,7 @@ class TaskCommands:
     
     @staticmethod
     def TaskRename(array, to_edit, new_name):
+        # TODO check if there is a ',' in the task name
         try:
             to_edit = int(to_edit)
         except ValueError:
@@ -250,63 +173,6 @@ class TaskUtils:
                 break
         return array
         
-class TaskTableDraw:
-    @staticmethod
-    def ArrayCharWidth(array):
-        table_line_size = 0
-        longer_line = []
-        try:
-            for col in range(numpy.shape(array)[1]):
-                longer_line.append(max(array[:, col], key=len))
-        except IndexError:
-            longer_line = array
-        table_line_size = 0
-        for i in range(len(longer_line)):
-            table_line_size = table_line_size + len(longer_line[i])
-        return table_line_size, longer_line
-
-    @staticmethod
-    def DrawDividingLine(size):
-        to_print = '-' * size
-        return to_print
-        
-    @staticmethod
-    def PrintLineWithVerticalSpacer(array, longer_line):
-        to_print = '|'
-        for cell in range(numpy.shape(array)[0]):
-            space_buffer_size = len(longer_line[cell]) - len(array[cell])
-            space_buffer = ' ' * space_buffer_size
-            to_print = to_print + array[cell] + space_buffer + '|'
-        return to_print
-    
-    @staticmethod
-    def TableDraw(array):
-        try:
-            number_table_row_column_cross = numpy.shape(array)[1] + 1
-        except:
-            number_table_row_column_cross = 4
-        
-        array_char_width = TaskTableDraw.ArrayCharWidth(array)[0]
-        array_longer_line = TaskTableDraw.ArrayCharWidth(array)[1]
-        row_size_padded = array_char_width\
-                                        + number_table_row_column_cross
-        table_column_num_char = numpy.shape(array)[0]
-        
-        print(TaskTableDraw.DrawDividingLine(row_size_padded))
-        try:
-            for line in range(0, table_column_num_char):
-                print(TaskTableDraw.PrintLineWithVerticalSpacer(array[line],\
-                                                        array_longer_line))
-                print(TaskTableDraw.DrawDividingLine(row_size_padded))
-        except IndexError:
-            table_column_num_char = numpy.shape(array)[0]
-            for line in range(0, table_column_num_char-2):
-                print(TaskTableDraw.PrintLineWithVerticalSpacer(array,\
-                                                        array_longer_line))
-            
-            print(TaskTableDraw.DrawDividingLine(row_size_padded))
-        return
-
 def Commands(array, option):
     loop = True
     match option:
@@ -341,7 +207,6 @@ def Commands(array, option):
         # TODO add Undo: undo last edit
         # TODO add Save and exit: save current tasklist and exit
         # TODO add auto save when comm=ex: true, false
-        # TODO add in program help
         case 'Save' | 'save' | 's':
             TaskFiles.TaskFileSave(array)
         case 'Exit' | 'exit' | 'ex':
